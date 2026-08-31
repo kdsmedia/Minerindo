@@ -61,7 +61,7 @@ export const getReferralCode = (phone: string): string => {
 
 export const getPhoneEmail = (phone: string): string => {
   const cleaned = phone.replace(/\D/g, '');
-  return `${cleaned}@minerindo.id`;
+  return `${cleaned}@minerindo.app`;
 };
 
 export const isToday = (dateStr: string | null | undefined): boolean => {
