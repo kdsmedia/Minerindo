@@ -2,6 +2,75 @@
 -- MINERINDO — Migrasi inti: profil, admin, reward, withdraw
 -- Idempoten (create or replace), aman dijalankan ulang)
 -- Siapkan RPC inti agar app + fitur admin berfungsi penuh di Supabase.
+-- ---------------------------------------------------------------
+-- Tabel inti MINERINDO (idempoten; aman dijalankan ulang)
+-- ---------------------------------------------------------------
+create table if not exists public.user_profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text not null default '',
+  full_name text,
+  phone text unique,
+  referral_code text unique,
+  invited_count int not null default 0,
+  invited_by text,
+  balance numeric not null default 0,
+  ads_count int not null default 0,
+  last_checkin date,
+  last_withdrawal timestamptz,
+  is_admin boolean not null default false,
+  is_blocked boolean not null default false,
+  last_rent_task_reward date,
+  last_invite_task_reward date,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.withdrawals (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.user_profiles(id) on delete cascade,
+  wallet_type text,
+  account_name text,
+  account_number text,
+  amount numeric not null default 0,
+  status text not null default 'menunggu',
+  created_at timestamptz not null default now(),
+  processed_at timestamptz
+);
+
+create table if not exists public.mining_sessions (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.user_profiles(id) on delete cascade,
+  coin_type text,
+  coin_name text,
+  start_time timestamptz not null default now(),
+  end_time timestamptz,
+  hashrate numeric not null default  0,
+  earned_rp numeric not null default  0,
+  machine_name text,
+  is_active boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.machine_rentals (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.user_profiles(id) on delete cascade,
+  machine_id text,
+  machine_name text,
+  machine_quality text,
+  price numeric not null default 0,
+  duration_minutes int not null default 0,
+  multiplier numeric not null default 1,
+  start_time timestamptz not null default now(),
+  end_time timestamptz,
+  is_active boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.checkin_history (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.user_profiles(id) on delete cascade,
+  checkin_date date not null,
+  created_at timestamptz not null default now()
+);
 -- =============================================================
 
 -- ---------------------------------------------------------------
@@ -28,9 +97,54 @@ create table if not exists public.reward_logs (
   reward_type text not null,
   amount numeric not null default 0,
   description text,
-  created_at timestamptz not null default now(
+  created_at timestamptz not null default now()
 );
-create index if not exists idx_reward_logs_user on public.reward_logs(user_id;
+create index if not exists idx_reward_logs_user on public.reward_logs(user_id);
+-- ---------------------------------------------------------------
+-- RLS dasar MINERINDO (user hanya akses data sendiri; admin via security definer)
+-- ---------------------------------------------------------------
+alter table public.user_profiles enable row level security;
+alter table public.withdrawals enable row level security;
+alter table public.mining_sessions enable row level security;
+alter table public.machine_rentals enable row level security;
+alter table public.checkin_history enable row level security;
+alter table public.reward_logs enable row level security;
+
+drop policy if exists "user_profiles_select_own" on public.user_profiles;
+create policy "user_profiles_select_own" on public.user_profiles for select to authenticated using (auth.uid() = id);
+drop policy if exists "user_profiles_insert_anon" on public.user_profiles;
+create policy "user_profiles_insert_anon" on public.user_profiles for insert to anon with check (true);
+drop policy if exists "user_profiles_insert_auth" on public.user_profiles;
+create policy "user_profiles_insert_auth" on public.user_profiles for insert to authenticated with check (auth.uid() = id);
+drop policy if exists "user_profiles_update_own" on public.user_profiles;
+create policy "user_profiles_update_own" on public.user_profiles for update to authenticated using (auth.uid() = id)with check (auth.uid() = id);
+
+drop policy if exists "withdrawals_select_own" on public.withdrawals;
+create policy "withdrawals_select_own" on public.withdrawals for select to authenticated using (auth.uid() = user_id);
+drop policy if exists "withdrawals_insert_own" on public.withdrawals;
+create policy "withdrawals_insert_own" on public.withdrawals for insert to authenticated with check (auth.uid() = user_id);
+
+drop policy if exists "mining_sessions_select_own" on public.mining_sessions;
+create policy "mining_sessions_select_own" on public.mining_sessions for select to authenticated using (auth.uid() = user_id);
+drop policy if exists "mining_sessions_insert_own" on public.mining_sessions;
+create policy "mining_sessions_insert_own" on public.mining_sessions for insert to authenticated with check (auth.uid() = user_id);
+drop policy if exists "mining_sessions_update_own" on public.mining_sessions;
+create policy "mining_sessions_update_own" on public.mining_sessions for update to authenticated using (auth.uid() = user_id)with check (auth.uid() = user_id);
+
+drop policy if exists "machine_rentals_select_own" on public.machine_rentals;
+create policy "machine_rentals_select_own" on public.machine_rentals for select to authenticated using (auth.uid() = user_id);
+drop policy if exists "machine_rentals_insert_own" on public.machine_rentals;
+create policy "machine_rentals_insert_own" on public.machine_rentals for insert to authenticated with check (auth.uid() = user_id);
+drop policy if exists "machine_rentals_update_own" on public.machine_rentals;
+create policy "machine_rentals_update_own" on public.machine_rentals for update to authenticated using (auth.uid() = user_id)with check (auth.uid() = user_id);
+
+drop policy if exists "checkin_history_select_own" on public.checkin_history;
+create policy "checkin_history_select_own" on public.checkin_history for select to authenticated using (auth.uid() = user_id);
+drop policy if exists "checkin_history_insert_own" on public.checkin_history;
+create policy "checkin_history_insert_own" on public.checkin_history for insert to authenticated with check (auth.uid() = user_id);
+
+drop policy if exists "reward_logs_select_own" on public.reward_logs;
+create policy "reward_logs_select_own" on public.reward_logs for select to authenticated using (auth.uid() = user_id);
 
 
 -- ---------------------------------------------------------------
@@ -103,12 +217,11 @@ begin
 
   update public.user_profiles
     set balance = coalesce(balance,0) + 50,
-        last_checkin := v_today,
+        last_checkin = v_today,
         ads_count = coalesce(ads_count,0) + 1
     where id = user_id_param;
 
   insert into public.checkin_history(user_id, checkin_date)
-)
   values (user_id_param, v_today);
   return true;
 end;
@@ -164,7 +277,7 @@ begin
   update public.user_profiles set balance = coalesce(balance,0) + 500 where id = new_user_id;
 
   insert into public.reward_logs(user_id, reward_type, amount, description)
-  ) values (v_ref, 'referral', 500, 'Bonus referral'),
+  values (v_ref, 'referral', 500, 'Bonus referral'),
           (new_user_id, 'referral', 500, 'Bonus referral dari kode');
 end;
 $$;
@@ -198,11 +311,11 @@ begin
 
   update public.user_profiles
     set balance = coalesce(balance,0) + 500,
-        last_rent_task_reward := v_today
+        last_rent_task_reward = v_today
     where id = user_id_param;
 
   insert into public.reward_logs(user_id, reward_type, amount, description)
-  ) values (user_id_param, 'rent_task', 500, 'Reward sewa mesin');
+  values (user_id_param, 'rent_task', 500, 'Reward sewa mesin');
   return 500;
 end;
 $$;
@@ -233,11 +346,11 @@ begin
 
   update public.user_profiles
     set balance = coalesce(balance,0) + 2000,
-        last_invite_task_reward := v_today
+        last_invite_task_reward = v_today
     where id = user_id_param;
 
   insert into public.reward_logs(user_id, reward_type, amount, description)
-  ) values (user_id_param, 'invite_task', 2000, 'Reward undang teman');
+  values (user_id_param, 'invite_task', 2000, 'Reward undang teman');
   return 2000;
 end;
 $$;
@@ -286,7 +399,7 @@ begin
   end if;
 
   insert into public.reward_logs(user_id, reward_type, amount, description)
-  ) values (target_user_id, 'admin_adjust', delta, 'Penyesuaian admin');
+  values (target_user_id, 'admin_adjust', delta, 'Penyesuaian admin');
 end;
 $$;
 
@@ -314,7 +427,6 @@ begin
  delete from public.user_profiles where id = target_user_id;
 
   delete from auth.users where id = target_user_id;
-;
 end;
 $$;
 
@@ -337,7 +449,7 @@ begin
     where id = target_user_id
     returning is_blocked into v_new_val;
 
-  return v_new_val;;
+  return v_new_val;
 end;
 $$;
 
@@ -354,4 +466,5 @@ grant execute on function public.claim_invite_reward(uuid) to anon, authenticate
 grant execute on function public.admin_list_users() to authenticated;
 grant execute on function public.admin_set_balance(uuid, numeric) to authenticated;
 grant execute on function public.admin_delete_user(uuid) to authenticated;
+grant execute on function public.admin_toggle_block(uuid) to authenticated;
 grant execute on function public.admin_toggle_block(uuid) to authenticated;
