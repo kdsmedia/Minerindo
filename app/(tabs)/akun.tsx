@@ -162,7 +162,7 @@ export default function AkunScreen() {
           <StatCard icon="counter" label="Total Tugas" value={String(profile?.ads_count || 0)} color={colors.primary} />
         </View>
 
-        {/* AdMob Banner */}
+        {/* Banner Placeholder */}
         <View style={styles.adBanner}>
           <Text style={styles.adText}>◆ MINERINDO by ALTOMEDIA</Text>
         </View>
