@@ -15,6 +15,7 @@ import { useFocusEffect } from 'expo-router';
 import { useApp } from '@/hooks/useApp';
 import { walletService } from '@/services/walletService';
 import { miningService } from '@/services/miningService';
+import { rewardService } from '@/services/rewardService';
 import { APP_CONFIG } from '@/constants/config';
 import { colors, gradients, spacing, radius, fontSize, fontWeight, shadow } from '@/constants/theme';
 import { formatRp, isToday } from '@/utils/helpers';
@@ -31,6 +32,8 @@ export default function BonusScreen() {
   const [checkinLoading, setCheckinLoading] = useState(false);
   const [streak, setStreak] = useState(0);
   const [taskRentDone, setTaskRentDone] = useState(false);
+  const [claimRentLoading, setClaimRentLoading] = useState(false);
+  const [claimInviteLoading, setClaimInviteLoading] = useState(false);
 
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -79,7 +82,7 @@ export default function BonusScreen() {
     if (success) {
       setCheckedInToday(true);
       setStreak((s) => s + 1);
-      setAdsCount((prev) => prev + 1);
+      setAdsCount(adsCount + 1);
       await refreshProfile();
       showAlert('Klaim Berhasil!', `Kamu mendapat bonus ${formatRp(APP_CONFIG.checkinReward)}`);
     } else if (error) {
@@ -100,6 +103,40 @@ export default function BonusScreen() {
     } else {
       showAlert('Info', 'Sewa mesin di tab Mesin untuk menyelesaikan tugas ini');
     }
+  };
+
+  const handleClaimRent = async () => {
+    if (!user || claimRentLoading) return;
+    setClaimRentLoading(true);
+    try {
+      const reward = await rewardService.claimRentTask(user.id);
+      await refreshProfile();
+      if (reward > 0) {
+        showAlert('Klaim Berhasil!', `Bonus sewa mesin ${formatRp(reward)} masuk ke saldo kamu`);
+      } else {
+        showAlert('Info', 'Bonus sewa mesin sudah diklaim hari ini');
+      }
+    } catch (e: any) {
+      showAlert('Gagal', e?.message || 'Tidak dapat klaim bonus sewa mesin');
+    }
+    setClaimRentLoading(false);
+  };
+
+  const handleClaimInvite = async () => {
+    if (!user || claimInviteLoading) return;
+    setClaimInviteLoading(true);
+    try {
+      const reward = await rewardService.claimInviteTask(user.id);
+      await refreshProfile();
+      if (reward > 0) {
+        showAlert('Klaim Berhasil!', `Bonus undang teman ${formatRp(reward)} masuk ke saldo kamu`);
+      } else {
+        showAlert('Info', 'Bonus undang teman sudah diklaim hari ini, atau undang belum mencapai 10 teman');
+      }
+    } catch (e: any) {
+      showAlert('Gagal', e?.message || 'Tidak dapat klaim bonus undang teman');
+    }
+    setClaimInviteLoading(false);
   };
 
   const invitedCount = profile?.invited_count || 0;
@@ -191,12 +228,29 @@ export default function BonusScreen() {
               <Text style={styles.taskTitle}>Undang 10 Teman</Text>
               <Text style={styles.taskReward}>Reward: {formatRp(APP_CONFIG.inviteFriendsTask.reward)}</Text>
             </View>
-            <TouchableOpacity onPress={handleInviteTask} activeOpacity={0.8}>
+            <TouchableOpacity onPress={
+                  invitedCount >= APP_CONFIG.inviteFriendsTask.required
+                    ? handleClaimInvite
+                    : handleInviteTask
+                } activeOpacity={0.8}>
               {invitedCount >= APP_CONFIG.inviteFriendsTask.required ? (
-                <View style={styles.claimedBtn}>
-                  <MaterialCommunityIcons name="check-circle" size={16} color={colors.accentGreen} />
-                  <Text style={styles.claimedText}>Selesai</Text>
-                </View>
+                isToday(profile?.last_invite_task_reward) ? (
+                  <View style={styles.claimedBtn}>
+                    <MaterialCommunityIcons name="check-circle" size={16} color={colors.accentGreen} />
+                    <Text style={styles.claimedText}>Diklaim</Text>
+                  </View>
+                ) : (
+                <LinearGradient colors={claimInviteLoading ? gradients.dark : gradients.gold} style={styles.claimBtn}>
+                  <MaterialCommunityIcons
+                    name={claimInviteLoading ? 'loading' : 'gift-open'}
+                    size={16}
+                    color={claimInviteLoading ? colors.textSecondary : '#000'}
+                  />
+                  <Text style={[styles.claimBtnText, claimInviteLoading && { color: colors.textSecondary }]}>
+                    {claimInviteLoading ? 'Memuat...' : 'KLAIM'}
+                  </Text>
+                </LinearGradient>
+                )
               ) : (
                 <LinearGradient colors={gradients.blue} style={styles.taskBtn}>
                   <Text style={styles.taskBtnText}>Undang</Text>
@@ -225,12 +279,29 @@ export default function BonusScreen() {
               <Text style={styles.taskTitle}>Sewa Mesin Mining</Text>
               <Text style={styles.taskReward}>Reward: {formatRp(APP_CONFIG.rentMachineTask.reward)}</Text>
             </View>
-            <TouchableOpacity onPress={handleRentTask} activeOpacity={0.8}>
+            <TouchableOpacity onPress={
+                  taskRentDone
+                    ? handleClaimRent
+                    : handleRentTask
+                } activeOpacity={0.8}>
               {taskRentDone ? (
-                <View style={styles.claimedBtn}>
-                  <MaterialCommunityIcons name="check-circle" size={16} color={colors.accentGreen} />
-                  <Text style={styles.claimedText}>Selesai</Text>
-                </View>
+                isToday(profile?.last_rent_task_reward) ? (
+                  <View style={styles.claimedBtn}>
+                    <MaterialCommunityIcons name="check-circle" size={16} color={colors.accentGreen} />
+                    <Text style={styles.claimedText}>Diklaim</Text>
+                  </View>
+                ) : (
+                <LinearGradient colors={claimRentLoading ? gradients.dark : gradients.gold} style={styles.claimBtn}>
+                  <MaterialCommunityIcons
+                    name={claimRentLoading ? 'loading' : 'gift-open'}
+                    size={16}
+                    color={claimRentLoading ? colors.textSecondary : '#000'}
+                  />
+                  <Text style={[styles.claimBtnText, claimRentLoading && { color: colors.textSecondary }]}>
+                    {claimRentLoading ? 'Memuat...' : 'KLAIM'}
+                  </Text>
+                </LinearGradient>
+                )
               ) : (
                 <LinearGradient colors={gradients.purple} style={styles.taskBtn}>
                   <Text style={styles.taskBtnText}>Sewa</Text>

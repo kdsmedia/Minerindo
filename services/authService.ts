@@ -16,6 +16,8 @@ export interface UserProfile {
   invited_by: string | null;
   is_admin: boolean;
   is_blocked: boolean;
+  last_rent_task_reward: string | null;
+  last_invite_task_reward: string | null;
 }
 
 export interface RegisterParams {

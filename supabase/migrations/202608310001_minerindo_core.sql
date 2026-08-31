@@ -20,6 +20,20 @@ create index if not exists idx_withdrawals_user on public.withdrawals(user_id);
 create index if not exists idx_withdrawals_status on public.withdrawals(status);
 
 -- ---------------------------------------------------------------
+-- Reward logs: log bonus tugas harian
+-- ---------------------------------------------------------------
+create table if not exists public.reward_logs (
+  id bigint generated always as identity primary key,
+  user_id uuid not null references public.user_profiles(id) on delete cascade,
+  reward_type text not null,
+  amount numeric not null default 0,
+  description text,
+  created_at timestamptz not null default now(
+);
+create index if not exists idx_reward_logs_user on public.reward_logs(user_id;
+
+
+-- ---------------------------------------------------------------
 -- RPC: tambah saldo (aman: hanya pemilik/profil sendiri)
 -- ---------------------------------------------------------------
 create or replace function public.add_mining_balance(
@@ -177,7 +191,7 @@ begin
 
   if exists(
     select 1 from public.user_profiles
-    where id = user_id_param and last_rent_task_reward := v_today
+    where id = user_id_param and last_rent_task_reward = v_today
   ) then
     return 0;
   end if;
@@ -212,7 +226,7 @@ begin
 
   if exists(
     select 1 from public.user_profiles
-    where id = user_id_param and last_invite_task_reward := v_today
+    where id = user_id_param and last_invite_task_reward = v_today
   ) then
     return 0;
   end if;
