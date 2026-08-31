@@ -1,3 +1,5 @@
+import type { ColorValue } from 'react-native';
+
 export const colors = {
   primary: '#F5C518',
   primaryLight: '#FFD700',
@@ -26,19 +28,21 @@ export const colors = {
   tin: '#9CA3AF',
 };
 
-export const gradients = {
-  gold: ['#F5C518', '#C8A000'] as string[],
-  goldLight: ['#FFD700', '#F5C518'] as string[],
-  dark: ['#0A0B1E', '#161830'] as string[],
-  darkDeep: ['#050614', '#0A0B1E'] as string[],
-  card: ['#1E2040', '#161830'] as string[],
-  mining: ['#1a1d3a', '#0A0B1E'] as string[],
-  success: ['#2ECC71', '#16A34A'] as string[],
-  danger: ['#E83535', '#C01F1F'] as string[],
-  blue: ['#3B82F6', '#1D4ED8'] as string[],
-  purple: ['#9B59B6', '#7C3AED'] as string[],
-  green: ['#10B981', '#059669'] as string[],
-  orange: ['#F59E0B', '#D97706'] as string[],
+export type GradientColors = readonly [ColorValue, ColorValue, ...ColorValue[]];
+
+export const gradients: Record<string, GradientColors> = {
+  gold: ['#F5C518', '#C8A000'],
+  goldLight: ['#FFD700', '#F5C518'],
+  dark: ['#0A0B1E', '#161830'],
+  darkDeep: ['#050614', '#0A0B1E'],
+  card: ['#1E2040', '#161830'],
+  mining: ['#1a1d3a', '#0A0B1E'],
+  success: ['#2ECC71', '#16A34A'],
+  danger: ['#E83535', '#C01F1F'],
+  blue: ['#3B82F6', '#1D4ED8'],
+  purple: ['#9B59B6', '#7C3AED'],
+  green: ['#10B981', '#059669'],
+  orange: ['#F59E0B', '#D97706'],
 };
 
 export const spacing = {

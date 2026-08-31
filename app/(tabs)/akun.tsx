@@ -191,6 +191,25 @@ export default function AkunScreen() {
           ))}
         </LinearGradient>
 
+        {profile?.is_admin && (
+          <TouchableOpacity
+            onPress={() => router.push('/admin')}
+            activeOpacity={0.85}
+            style={styles.adminBtnWrap}
+          >
+            <LinearGradient colors={['#1E2040', '#161830']} style={styles.adminBtn}>
+              <View style={styles.adminIconWrap}>
+                <MaterialCommunityIcons name="shield-crown-outline" size={22} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.adminBtnTitle}>Kelola Pengguna</Text>
+                <Text style={styles.adminBtnSub}>Saldo · Blokir · Hapus akun</Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textMuted} />
+            </LinearGradient>
+          </TouchableOpacity>
+        )}
+
         {/* Social */}
         <Text style={styles.sectionTitle}>Hubungi Kami</Text>
         <TouchableOpacity
@@ -294,6 +313,18 @@ const styles = StyleSheet.create({
     alignItems: 'center', borderWidth: 1, borderColor: colors.border, minHeight: 60, justifyContent: 'center',
   },
   adText: { fontSize: fontSize.sm, color: colors.textMuted },
+  adminBtnWrap: { borderRadius: radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: colors.border },
+  adminBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    padding: spacing.lg,
+  },
+  adminIconWrap: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: colors.bgCardLight,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  adminBtnTitle: { fontSize: fontSize.body, fontWeight: fontWeight.bold, color: colors.text },
+  adminBtnSub: { fontSize: fontSize.xs, color: colors.textMuted },
   sectionTitle: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.textSecondary },
   linksCard: { borderRadius: radius.xl, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
   linkItem: {

@@ -14,6 +14,8 @@ export interface UserProfile {
   last_withdrawal: string | null;
   invited_count: number;
   invited_by: string | null;
+  is_admin: boolean;
+  is_blocked: boolean;
 }
 
 export interface RegisterParams {
@@ -97,6 +99,16 @@ export const authService = {
       if (msg.includes('Invalid login')) msg = 'Nomor atau sandi salah';
       if (msg.includes('Email not confirmed')) msg = 'Akun belum dikonfirmasi';
       return { error: msg, user: null };
+    }
+
+    const p = await supabase
+      .from('user_profiles')
+      .select('is_blocked')
+      .eq('id', data.user.id)
+      .single();
+    if (p.data?.is_blocked) {
+      await supabase.auth.signOut();
+      return { error: 'Akun Anda diblokir. Hubungi admin.', user: null };
     }
 
     return { error: null, user: data.user };
