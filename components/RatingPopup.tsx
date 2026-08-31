@@ -48,8 +48,10 @@ export function RatingPopup() {
   };
 
   useEffect(() => {
+    const timer = setTimeout(checkAndShow, 5000);
     const interval = setInterval(checkAndShow, APP_CONFIG.ratingPopupInterval);
     return () => {
+      clearTimeout(timer);
       clearInterval(interval);
     };
   }, []);

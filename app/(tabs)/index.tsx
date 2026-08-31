@@ -291,7 +291,7 @@ export default function MiningScreen() {
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* Banner Placeholder */}
+        {/* AdMob Banner Placeholder */}
         <View style={styles.adBanner}>
           <Text style={styles.adBannerText}>◆ MINERINDO</Text>
         </View>

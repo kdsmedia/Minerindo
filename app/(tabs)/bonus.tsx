@@ -63,14 +63,14 @@ export default function BonusScreen() {
   const handleCheckin = async () => {
     if (!user || checkedInToday || checkinLoading) return;
 
-    // Tampilkan animasi klaim
+    // Simulate ad view
     setCheckinLoading(true);
     Animated.sequence([
       Animated.timing(scaleAnim, { toValue: 0.95, duration: 100, useNativeDriver: true }),
       Animated.spring(scaleAnim, { toValue: 1, friction: 4, useNativeDriver: true }),
     ]).start();
 
-    // Tunggu sejenak simulasi proses
+    // Simulate ad duration (2 seconds)
     await new Promise((r) => setTimeout(r, 2000));
 
     const { success, error } = await walletService.doCheckin(user.id);
@@ -149,7 +149,7 @@ export default function BonusScreen() {
             <View>
               <Text style={styles.checkinTitle}>Check-In Harian</Text>
               <Text style={styles.checkinReward}>Reward: {formatRp(APP_CONFIG.checkinReward)}</Text>
-              <Text style={styles.checkinNote}>Selesaikan untuk klaim</Text>
+              <Text style={styles.checkinNote}>Tonton penuh untuk klaim</Text>
             </View>
           </View>
 
@@ -243,7 +243,7 @@ export default function BonusScreen() {
           </Text>
         </LinearGradient>
 
-        {/* Banner Placeholder */}
+        {/* Ads Counter */}
         <LinearGradient colors={['#1E2040', '#161830']} style={styles.adsCard}>
           <MaterialCommunityIcons name="counter" size={28} color={colors.primary} />
           <View style={{ flex: 1 }}>
