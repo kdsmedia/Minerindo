@@ -8,7 +8,7 @@ export interface MachineConfig {
   durationMinutes: number;
   multiplier: number;
   description: string;
-  gradient: string[];
+  gradient: readonly [string, string];
 }
 
 export interface CoinConfig {
@@ -17,7 +17,7 @@ export interface CoinConfig {
   fullName: string;
   icon: string;
   color: string;
-  gradient: string[];
+  gradient: readonly [string, string];
   baseHashrateMH: number;
   ratePerSec: number;
   rpPerCoin: number;

@@ -167,8 +167,7 @@ export default function DompetScreen() {
                   {walletType === w.id && (
                     <LinearGradient
                       colors={[w.color + '33', w.color + '11']}
-                      style={StyleSheet.absoluteFill}
-                      borderRadius={radius.lg}
+                      style={[StyleSheet.absoluteFill, { borderRadius: radius.lg }]}
                     />
                   )}
                   <MaterialCommunityIcons name={w.icon as any} size={22} color={walletType === w.id ? w.color : colors.textMuted} />

@@ -139,7 +139,7 @@ export default function LoginScreen() {
               onPress={() => { setIsLogin(true); }}
               activeOpacity={0.8}
             >
-              {isLogin && <LinearGradient colors={gradients.gold} style={StyleSheet.absoluteFill} borderRadius={radius.full} />}
+              {isLogin && <LinearGradient colors={gradients.gold} style={[StyleSheet.absoluteFill, { borderRadius: radius.full }]} />}
               <Text style={[styles.toggleText, isLogin && styles.toggleTextActive]}>MASUK</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -147,7 +147,7 @@ export default function LoginScreen() {
               onPress={() => { setIsLogin(false); }}
               activeOpacity={0.8}
             >
-              {!isLogin && <LinearGradient colors={gradients.gold} style={StyleSheet.absoluteFill} borderRadius={radius.full} />}
+              {!isLogin && <LinearGradient colors={gradients.gold} style={[StyleSheet.absoluteFill, { borderRadius: radius.full }]} />}
               <Text style={[styles.toggleText, !isLogin && styles.toggleTextActive]}>DAFTAR</Text>
             </TouchableOpacity>
           </View>

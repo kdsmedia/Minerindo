@@ -254,7 +254,7 @@ export default function MiningScreen() {
                 activeOpacity={0.8}
               >
                 <LinearGradient
-                  colors={selectedCoin.id === coin.id ? coin.gradient : ['#1E2040', '#161830']}
+                  colors={(selectedCoin.id === coin.id ? coin.gradient : ['#1E2040', '#161830']) as [string, string]}
                   style={[styles.coinCard, selectedCoin.id === coin.id && styles.coinCardActive]}
                 >
                   <MaterialCommunityIcons name={coin.icon as any} size={24} color={selectedCoin.id === coin.id ? '#fff' : coin.color} />
